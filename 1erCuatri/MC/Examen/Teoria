@@ -1,0 +1,12 @@
+Un lenguaje L puede ser aceptado por un autómata finito determinista si y solo si L puede ser aceptado por un autómata finito no determinista si y solo si aceptado por AFD con trans nulas.
+
+Lenguajes regulares cerrados para union, concatenacion, clausura, interseccion y complementario. Los homomorfismos conservan la propiedad de ser regular
+
+Lenguajes indep del contexto cerrados para union, concatenacion y clausura. Abiertos para complementario e interseccion
+
+Lenguajes indep del contexto deterministas cerrados para interseccion.
+
+No determinista: equivalen el criterio de pila vacia y estados finales en automatas con pila para un lenguaje (si es generado por uno, hay del otro tipo que lo genere)
+
+Determinismo: Si L es aceptado por un Aut Pila determinista por pila vacia, existe un aut Pila determinista de estados finales que lo acepta, pero el reciproco no es cierto. Si L cumple la propiedad del prefijo, entonces si es cierto. Si no cumple la propiedad, hacemos un lenguaje que lo extienda y que a cada palabra le añada un simbolo al final, entonces ya la cumplirá.
+
