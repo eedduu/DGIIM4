@@ -139,6 +139,31 @@
 )
 
 
+;;;;;;;;;;; CLISP JUEGA SIN CRITERIO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defrule elegir_jugada_aleatoria
+(declare (salience -9998))
+?f <- (Turno M)
+=>
+(assert (Jugar (random 1 7)))
+(retract ?f)
+)
+
+(defrule comprobar_posible_jugada_aleatoria
+?f <- (Jugar ?c)
+(Tablero Juego 1 ?c M|J)
+=>
+(retract ?f)
+(assert (Turno M))
+)
+
+(defrule clisp_juega_sin_criterio
+(declare (salience -9999))
+?f<- (Jugar ?c)
+=>
+(printout t "JUEGO en la columna (sin criterio) " ?c crlf)
+(retract ?f)
+(assert (Juega M ?c))
+)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;  Comprobar si hay 4 en linea ;;;;;;;;;;;;;;;;;;;;;
 
@@ -268,12 +293,12 @@
 ;;;;;;;;;;;;;;;;;;;;;; CONOCIMIENTO EXPERTO ;;;;;;;;;;
 ;;;;; ¡¡¡¡¡¡¡¡¡¡ Añadir conocimiento para que juege como vosotros jugariais !!!!!!!!!!!!
 
-
+;;Si el jugador rival puede ganar, se bloquea esa posibilidad
 (defrule evitar_ganar_jugada
-  (declare (salience 9000))
+  (declare (salience 9998))
   ?ff <- (evitar_jugada ?i ?c)
-  (Tablero Juego ?i ?c _)
-  (or (Tablero Juego ?i+1 ?c M|J) (eq ?i 1))
+  (Tablero Juego ?i ?c _); si la casilla está libre
+  (or (Tablero Juego ?i+1 ?c M|J) (eq ?i 1)); si debajo de la casilla seleccionada hay ya una ficha o si se trata de la fila más baja
   ?f <- (Turno M)
   =>
   (assert (Jugar ?c))
@@ -281,6 +306,8 @@
   (retract ?ff)
 )
 
+
+;;Si se puede ganar la partida, se gana
 (defrule ganar_jugada
   (declare (salience 9999))
   (Tablero Juego ?i ?c _)
@@ -294,9 +321,24 @@
   (retract ?ff)
 )
 
+;; Si se pueden juntar 3 fichas, se juntan
+(defrule juntar3
+  (declare (salience 8000))
+  (Tablero Juego ?i ?c _)
+  (or (Tablero Juego ?i+1 ?c M|J) (eq ?i 1))
+
+  ?ff <- (juntar3_jugada ?i ?c)
+  ?f <- (Turno M)
+  =>
+  (assert (Jugar ?c))
+  (retract ?f)
+  (retract ?ff)
+
+)
+
 ; si está disponible jugar en medio, juega en medio, ya que tiene mejor combinaciones posibles desde ahí.
 (defrule jugar_medio
-  (declare (salience 8999))
+  (declare (salience 5000))
   ?f <- (Turno M)
   (or (Tablero Juego 6 4 _) (Tablero Juego 5 4 _) (Tablero Juego 4 4 _) (Tablero Juego 3 4 _) (Tablero Juego 2 4 _) )
   =>
@@ -304,18 +346,9 @@
   (retract ?f)
 )
 
-(defrule elegir_jugada
-  (declare (salience -999))
-  ?f <- (Turno M)
-  =>
-  (assert (Jugar (random 1 7)))
-  (retract ?f)
-)
-
-(defrule comprobar_ganar
 
 
-)
+;; Para que no se salga del tablero
 (defrule comprobar_posible_jugada
   (declare (salience 1))
   ?f <- (Juega M ?c)
@@ -326,7 +359,8 @@
   (assert (Turno M))
 )
 
-(defrule clisp_juega_sin
+;;Pone la ficha
+(defrule clisp_juega
   (declare (salience 20))
   ?f<- (Jugar ?c)
   =>
@@ -335,7 +369,7 @@
   (assert (Juega M ?c))
 )
 
-;;TRES EN LINEA JUG
+;;DETECTA QUE EL JUGADOR RIVAL TIENE 3 FICHAS EN LINEA
 
 (defrule tres_en_linea_horizontal_j
   (declare (salience 9999))
@@ -351,7 +385,6 @@
   (assert (evitar_jugada ?i (+ ?c1 -1)) )
   (assert (evitar_jugada ?i (+ ?c3 1)))
 
-  (printout t "Hay 3 en linea")
 )
 
 (defrule tres_en_linea_vertical_j
@@ -366,7 +399,6 @@
   =>
   (assert (tres_en_linea ?t ?jugador vertical ?i1 ?c))
   (assert (evitar_jugada (+ ?i1 -1) ?c))
-  (printout t "Hay 3 en linea")
 )
 
 (defrule tres_en_linea_diagonal_directa_j
@@ -385,7 +417,6 @@
 (assert (tres_en_linea ?t ?jugador diagonal_directa ?i ?c)) ; arriba izqd
 (assert (evitar_jugada (+ ?i -1) (+ ?c -1)))
 (assert (evitar_jugada (+ ?i2 1) (+ ?c2 1)))
-(printout t "Hay 3 en linea")
 )
 
 (defrule tres_en_linea_diagonal_inversa_j
@@ -404,11 +435,10 @@
 (assert (tres_en_linea ?t ?jugador diagonal_inversa ?i ?c)) ; arriba derecha
 (assert (evitar_jugada (+ ?i -1) (+ ?c +1)))
 (assert (evitar_jugada (+ ?i2 1) (+ ?c2 -1)))
-(printout t "Hay 3 en linea")
 )
 
 
-;;TRES EN LINEA MAQ
+;;DETECTA QUE CLIPS TIENE 3 FICHAS EN LINEA
 
 
 (defrule tres_en_linea_horizontal_m
@@ -424,7 +454,6 @@
   (assert (tres_en_linea ?t ?jugador horizontal ?i ?c1))
   (assert (ganar_jugada ?i (+ ?c1 -1)))
   (assert (ganar_jugada ?i (+ ?c3 1)))
-  (printout t "Tengo 3 en linea")
 )
 
 (defrule tres_en_linea_vertical_m
@@ -439,7 +468,6 @@
   =>
   (assert (tres_en_linea ?t ?jugador vertical ?i1 ?c))
   (assert (ganar_jugada (+ ?i1 -1) ?c))
-  (printout t "Tengo 3 en linea")
 )
 
 (defrule tres_en_linea_diagonal_directa_m
@@ -458,7 +486,6 @@
 (assert (tres_en_linea ?t ?jugador diagonal_directa ?i ?c)); arriba izqd
 (assert (ganar_jugada (+ ?i -1) (+ ?c -1)))
 (assert (ganar_jugada (+ ?i2 +1) (+ ?c2 +1)))
-(printout t "Tengo 3 en linea")
 )
 
 (defrule tres_en_linea_diagonal_inversa_m
@@ -477,5 +504,66 @@
 (assert (tres_en_linea ?t ?jugador diagonal_inversa ?i ?c)); arriba derecha
 (assert (ganar_jugada (+ ?i -1) (+ ?c +1)))
 (assert (ganar_jugada (+ ?i2 1) (+ ?c2 -1)))
-(printout t "Tengo 3 en linea")
+)
+
+
+;;; DETECTA QUE CLIPS TIENE 2 EN LINEA
+
+(defrule dos_en_linea_horizontal_m
+  (declare (salience 5000))
+  (Tablero ?t ?i ?c1 ?jugador)
+  (Tablero ?t ?i ?c2 ?jugador)
+  (test (= (+ ?c1 1) ?c2))
+
+
+  (test (eq ?jugador M) )
+  =>
+  (assert (dos_en_linea ?t ?jugador horizontal ?i ?c1))
+  (assert (juntar3_jugada ?i (+ ?c1 -1)))
+  (assert (juntar3_jugada ?i (+ ?c2 1)))
+)
+
+(defrule dos_en_linea_vertical_m
+  (declare (salience 5000))
+  ?f <- (Turno ?X)
+  (Tablero ?t ?i1 ?c ?jugador)
+  (Tablero ?t ?i2 ?c ?jugador)
+  (test (= (+ ?i1 1) ?i2))
+
+  (test (eq ?jugador M) )
+  =>
+  (assert (dos_en_linea ?t ?jugador vertical ?i1 ?c))
+  (assert (juntar3_jugada (+ ?i1 -1) ?c))
+)
+
+(defrule dos_en_linea_diagonal_directa_m
+  (declare (salience 5000))
+  ?f <- (Turno ?X)
+  (Tablero ?t ?i ?c ?jugador)
+  (Tablero ?t ?i1 ?c1 ?jugador)
+  (test (= (+ ?i 1) ?i1))
+  (test (= (+ ?c 1) ?c1))
+
+
+  (test (eq ?jugador M) )
+  =>
+  (assert (dos_en_linea ?t ?jugador diagonal_directa ?i ?c)); arriba izqd
+  (assert (juntar3_jugada (+ ?i -1) (+ ?c -1)))
+  (assert (juntar3_jugada (+ ?i1 +1) (+ ?c1 +1)))
+)
+
+(defrule dos_en_linea_diagonal_inversa_m
+  (declare (salience 5000))
+  ?f <- (Turno ?X)
+  (Tablero ?t ?i ?c ?jugador)
+  (Tablero ?t ?i1 ?c1 ?jugador)
+  (test (= (+ ?i 1) ?i1))
+  (test (= (- ?c 1) ?c1))
+
+
+  (test (eq ?jugador M) )
+  =>
+  (assert (dos_en_linea ?t ?jugador diagonal_inversa ?i ?c)); arriba derecha
+  (assert (juntar3_jugada (+ ?i -1) (+ ?c +1)))
+  (assert (juntar3_jugada (+ ?i1 1) (+ ?c1 -1)))
 )

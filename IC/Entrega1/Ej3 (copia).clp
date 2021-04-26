@@ -40,6 +40,31 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defrule MatesNs
+  (Mates "No se")
+  =>
+  (printout t "Y te gusta programar? (Si/No)" crlf)
+  (assert (Prog (read)))
+)
+
+(defrule NotaNs
+  (Mates "No se")
+  (Prog ?c)
+  =>
+  (printout t "¿Cual es tu nota media (1-10)?" )
+  (assert (ponerNota(read)))
+)
+
+(defrule HardwareNs
+  (Mates "No se")
+  (Prog ?c)
+  (nota ?c)
+  =>
+  (printout t "Te gusta el Hardware? " )
+  (assert (Hardware (read)))
+
+)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defrule NotaMedia
   (Mates No)
   =>
@@ -72,8 +97,9 @@
 
 
 (defrule eligeCSI
-  (or (Mates Si) (Mates Nose))
+  (or (Mates Si) (Mates "No se"))
   (Prog Si)
+  (nota Alta)
 
   =>
   (assert (elegido Computacion_y_Sistemas_Inteligentes))
