@@ -1,0 +1,15 @@
+Este es el programa que cambia los ceros de la palabra por simbolos en blanco
+δ(q0, 0) = (q0, #, D)
+δ(q0, 1) = (q0, 1, D)
+δ(q0, #) = (qf, #, D)
+
+##1#1#
+
+LEFT
+[C]RIGHT
+IF # GOTO E
+IF 0 GOTO A
+IF 1 GOTO C
+[A]PRINT #
+IF # GOTO C
+[E]HALT
